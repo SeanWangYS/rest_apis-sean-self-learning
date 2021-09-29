@@ -1,13 +1,6 @@
 import sqlite3
-from db import db
 
-class ItemModel(db.Model):   #db.Model→it's going to create that mapping between the database and this entity
-    __tablename__ = 'items'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80))             # 建立物件時，會直接把這個variable丟入 __init__ 建構子
-    price = db.Column(db.Float(precision=2))
-    
+class ItemModel:
     def __init__(self, name, price):
         self.name  = name
         self.price = price
