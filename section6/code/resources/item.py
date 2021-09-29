@@ -1,8 +1,8 @@
 import sqlite3
-from sqlite3.dbapi2 import connect
 from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
 from models.item import ItemModel
+from db import db
 
 
 class Item(Resource):
@@ -29,42 +29,32 @@ class Item(Resource):
         item = ItemModel(name, data['price'])
 
         try:
-            item.insert()
-        except:
-            return {"message": "An error occurred inserting the"}, 500 # Internal Sever Error
+            item.save_to_db()
+        except Exception as e:
+            return {"message": f"An error occurred inserting: {str(e)}"}, 500 # Internal Sever Error
 
         return item.json(), 201
 
-    def delete(slef, name):
-        if ItemModel.find_by_name(name):
-            connection = sqlite3.connect('data.db')
-            cursor = connection.cursor()
-            query = "DELETE FROM items WHERE name=?"
-            cursor.execute(query, (name, ))
+    def delete(self, name):
+        item = ItemModel.find_by_name(name)
+        if item:
+            item.delete_from_db()
 
-            connection.commit()
-            connection.close()
+        return {'message': "Item deleted"}
 
-            return {'message': 'Item deleted'}
-        return {'message': "Item doesn't exist"}, 400
         
     def put(self, name):
         data = __class__.parser.parse_args()
 
         item = ItemModel.find_by_name(name)
-        updated_item = ItemModel(name, data['price'])
-        if item:
-            try:
-                updated_item.update()   # 假如有找到，理應是對 item 物件做update呀, 這裡變數的使用上邏輯有誤（但實際上沒問題），講師說之後會修正
-            except:
-                return {"message": "An error occurred updating the item"}, 500
+        if item is None:
+            item = ItemModel(name, data['price'])
         else:
-            try:
-                updated_item.insert()  # 假若找不到item, 就建立新的updated_item,並且insert
-            except:
-                return {"message": "An error occurred inserting the item"}, 500
-        return updated_item.json()
- 
+            item.price = data['price']
+        item.save_to_db()
+
+        return item.json()
+
 
 class ItemList(Resource):
     def get(self):

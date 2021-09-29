@@ -35,7 +35,7 @@ class Item(Resource):
 
         return item.json(), 201
 
-    def delete(slef, name):
+    def delete(self, name):
         if ItemModel.find_by_name(name):
             connection = sqlite3.connect('data.db')
             cursor = connection.cursor()

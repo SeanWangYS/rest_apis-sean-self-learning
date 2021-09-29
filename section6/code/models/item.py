@@ -1,4 +1,3 @@
-import sqlite3
 from db import db
 
 class ItemModel(db.Model):   #db.Model→it's going to create that mapping between the database and this entity
@@ -17,32 +16,15 @@ class ItemModel(db.Model):   #db.Model→it's going to create that mapping betwe
 
     @classmethod
     def find_by_name(cls, name):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        return cls.query.filter_by(name=name).first() # SELECT * FROM items WHERE name=? LIMIT 1 # 返回的是一個ItemModel物件
 
-        query = 'SELECT * FROM items WHERE name=?'
-        result = cursor.execute(query, (name, ))
-        row  = result.fetchone()
-        connection.close()
 
-        if row:
-            # return cls(row[0], row[1])
-            return cls(*row)
+    def save_to_db(self):
+        db.session.add(self) # The session in this instance is a collection of objects, that we're going to write to the database.
+        db.session.commit()
+        # SQLAlchemy will do an update instead of an insert.So this method here actually is useful for both the update and the insert.
+        
 
-    def insert(self):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        query = 'INSERT INTO items VALUES (?, ?)'
-        cursor.execute(query, (self.name, self.price))
-
-        connection.commit()
-        connection.close()
-
-    def update(self):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        query = "UPDATE items SET price=? WHERE name=?"
-        cursor.execute(query, (self.price, self.name))
-
-        connection.commit()
-        connection.close()
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
